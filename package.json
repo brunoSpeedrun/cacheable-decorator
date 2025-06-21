@@ -1,0 +1,62 @@
+{
+  "name": "cacheable-decorator",
+  "version": "1.0.0-alpha",
+  "description": "A zero dependencies decorator for cache concerns.",
+  "license": "MIT",
+  "author": "bxmoura",
+  "type": "commonjs",
+  "main": "dist/lib/index.js",
+  "types": "dist/lib/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "homepage": "",
+  "bugs": {
+    "url": "https://github.com/brunoSpeedrun/cacheable-decorator/issues"
+  },
+  "files": [
+    "/dist"
+  ],
+	"keywords": [
+		"key",
+		"value",
+		"store",
+		"cache",
+		"ttl",
+		"key-value",
+		"storage",
+		"backend",
+		"adapter",
+		"redis",
+		"mongodb",
+		"sqlite",
+		"mysql",
+		"postgresql",
+		"memory",
+		"node-cache",
+		"lru-cache",
+		"lru",
+		"cache-manager",
+    "cacheable",
+    "keyv"
+	],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "jest --runInBand --coverage --verbose",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "@types/jest": "30.0.0",
+    "@types/node": "24.0.3",
+    "jest": "30.0.2",
+    "ts-jest": "29.4.0",
+    "typescript": "5.8.3"
+  },
+  "peerDependencies": {
+    "reflect-metadata": "0.2.2"
+  },
+  "engines": {
+    "node": "^24 || ^22 || ^20"
+  }
+}
