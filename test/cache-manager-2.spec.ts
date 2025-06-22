@@ -28,4 +28,13 @@ describe('CacheManager', () => {
 
     expect(cacheManager.isEnabled).toBe(true);
   });
+
+  it('should initialize with default values', () => {
+    cacheManager.initialize({});
+
+    expect(cacheManager.isEnabled).toBe(true);
+    expect(cacheManager.tllInMilliseconds).toBeFalsy();
+    expect(cacheManager.isCacheable({})).toBe(true);
+    expect(cacheManager.logger).toBeTruthy();
+  });
 });
