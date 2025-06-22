@@ -1,6 +1,6 @@
-import { CacheLike } from './cache-like';
+import { CacheStoreLike } from './cache-like';
 
-export class InMemoryCache implements CacheLike {
+export class InMemoryCache implements CacheStoreLike {
   private readonly store: Map<string, { value: any; expiresAt?: number }>;
 
   constructor() {

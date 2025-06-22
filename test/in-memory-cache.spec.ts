@@ -1,7 +1,7 @@
-import { CacheLike, InMemoryCache } from '../lib';
+import { CacheStoreLike, InMemoryCache } from '../lib';
 
 describe('InMemoryCache', () => {
-  let cache: CacheLike;
+  let cache: CacheStoreLike;
 
   beforeEach(() => {
     cache = new InMemoryCache();

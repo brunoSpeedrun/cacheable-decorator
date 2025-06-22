@@ -1,7 +1,7 @@
 import {
   CacheKeyGeneratorStrategy,
   CacheManager,
-  CacheLike,
+  CacheStoreLike,
   InMemoryCache,
   LoggerLike,
   UseCache,
@@ -11,7 +11,7 @@ describe('UseCache', () => {
   const cacheManager = CacheManager.getInstance();
 
   const setDefaultCacheMock = () => {
-    const inMemoryCache: jest.Mocked<CacheLike> = {
+    const inMemoryCache: jest.Mocked<CacheStoreLike> = {
       get: jest.fn(),
       set: jest.fn(),
     };
@@ -183,7 +183,7 @@ describe('UseCache', () => {
       const cachedValue = { id, user: `User ${id} from cache` };
       const expectedArgsAsBase64 = Buffer.from(
         JSON.stringify([id]),
-        'utf-8',
+        'utf-8'
       ).toString('base64');
       const cacheKey = `service:find-by-id:${expectedArgsAsBase64}`;
 
@@ -419,7 +419,7 @@ describe('UseCache', () => {
       return (
         target: any,
         propertyKey: string | symbol,
-        descriptor: PropertyDescriptor,
+        descriptor: PropertyDescriptor
       ) => {
         Reflect.defineMetadata('decorator-1', 'decorator:1', descriptor.value);
       };
@@ -428,7 +428,7 @@ describe('UseCache', () => {
       return (
         target: any,
         propertyKey: string | symbol,
-        descriptor: PropertyDescriptor,
+        descriptor: PropertyDescriptor
       ) => {
         Reflect.defineMetadata('decorator-2', 'decorator:2', descriptor.value);
       };

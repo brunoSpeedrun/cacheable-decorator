@@ -1,4 +1,4 @@
-export interface CacheLike {
+export interface CacheStoreLike {
   /**
    * Get the value of a Key
    * @param {string} key cache key
@@ -14,5 +14,5 @@ export interface CacheLike {
   set<T = any>(key: string, value: T, ttl?: number): Promise<boolean>;
 }
 
-export const isCacheValid = (store: any) =>
+export const isCacheStoreValid = (store: any) =>
   typeof store?.get === 'function' && typeof store?.set === 'function';

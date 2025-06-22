@@ -1,4 +1,8 @@
-import { CacheManager, CacheLike, CacheKeyGeneratorFactory } from './cache';
+import {
+  CacheManager,
+  CacheStoreLike,
+  CacheKeyGeneratorFactory,
+} from './cache';
 import { UseCacheOptions } from './use-cache-options';
 import { copyMethodMetadata } from './utils';
 
@@ -8,7 +12,7 @@ import { copyMethodMetadata } from './utils';
 export function UseCache(): (
   target: any,
   propertyKey: string | symbol,
-  descriptor: TypedPropertyDescriptor<(...args: any) => Promise<any>>,
+  descriptor: TypedPropertyDescriptor<(...args: any) => Promise<any>>
 ) => void;
 
 /**
@@ -17,26 +21,26 @@ export function UseCache(): (
  * @param options Use cache options
  */
 export function UseCache<TArgs extends any[]>(
-  options: UseCacheOptions<TArgs>,
+  options: UseCacheOptions<TArgs>
 ): (
   target: any,
   propertyKey: string | symbol,
-  descriptor: TypedPropertyDescriptor<(...args: TArgs) => Promise<any>>,
+  descriptor: TypedPropertyDescriptor<(...args: TArgs) => Promise<any>>
 ) => void;
 
 export function UseCache<TArgs extends any[]>(
-  maybeOptions?: UseCacheOptions<TArgs>,
+  maybeOptions?: UseCacheOptions<TArgs>
 ) {
   return (
     target: any,
     propertyKey: string | symbol,
-    descriptor: TypedPropertyDescriptor<(...args: TArgs) => Promise<any>>,
+    descriptor: TypedPropertyDescriptor<(...args: TArgs) => Promise<any>>
   ) => {
     const original = descriptor.value;
 
     if (typeof original !== 'function') {
       throw new Error(
-        `The @UseCase decorator can be only used on functions, but ${propertyKey.toString()} is not a function.`,
+        `The @UseCase decorator can be only used on functions, but ${propertyKey.toString()} is not a function.`
       );
     }
 
@@ -50,7 +54,7 @@ export function UseCache<TArgs extends any[]>(
 
         if (cacheManager.isDisabled) {
           cacheManager.logger.info(
-            `${logLabel} Cache skipped. Cache Manager is disabled. Call CacheManager.getInstance().enable() to enable cache.`,
+            `${logLabel} Cache skipped. Cache Manager is disabled. Call CacheManager.getInstance().enable() to enable cache.`
           );
 
           return original.apply(outerThis, args);
@@ -62,22 +66,22 @@ export function UseCache<TArgs extends any[]>(
           if (shouldSkipCache) {
             cacheManager.logger.info(
               `${logLabel} Cache skipped. Skip method called with ${JSON.stringify(
-                args,
-              )}`,
+                args
+              )}`
             );
 
             return original.apply(outerThis, args);
           }
         }
 
-        let cache: CacheLike | undefined;
+        let cache: CacheStoreLike | undefined;
 
         if (maybeOptions?.name) {
           cache = cacheManager.getCache(maybeOptions.name);
 
           if (!cache) {
             cacheManager.logger.warn(
-              `${logLabel} Cache skipped. Cache '${maybeOptions?.name}' does not exists in CacheManager.`,
+              `${logLabel} Cache skipped. Cache '${maybeOptions?.name}' does not exists in CacheManager.`
             );
 
             return original.apply(outerThis, args);
@@ -87,12 +91,12 @@ export function UseCache<TArgs extends any[]>(
         }
 
         const cacheKeyGenerator = CacheKeyGeneratorFactory.from(
-          maybeOptions?.key,
+          maybeOptions?.key
         );
         const cacheKey = cacheKeyGenerator.generate(
           outerThis,
           propertyKey.toString(),
-          ...args,
+          ...args
         );
 
         const cached = await cache.get(cacheKey);
@@ -115,7 +119,7 @@ export function UseCache<TArgs extends any[]>(
 
         if (!canCache) {
           cacheManager.logger.warn(
-            `${logLabel} Cache not saved. isCacheable returns false`,
+            `${logLabel} Cache not saved. isCacheable returns false`
           );
 
           return value;

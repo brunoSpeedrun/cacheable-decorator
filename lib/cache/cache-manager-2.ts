@@ -1,4 +1,5 @@
 import { DisabledCacheLogger, isLoggerValid, LoggerLike } from '../logger';
+import { CacheStoreLike, isCacheStoreValid } from './cache-like';
 
 export type CacheManagerOptions = {
   enabled?: boolean;
@@ -12,6 +13,7 @@ const ENABLED = Symbol('ENABLED');
 const TTL = Symbol('TTL');
 const IS_CACHEABLE = Symbol('IS_CACHEABLE');
 const LOGGER = Symbol('LOGGER');
+const CACHE_STORES = Symbol('CACHE_STORES');
 
 const disabledLogger = new DisabledCacheLogger();
 
@@ -20,6 +22,7 @@ export class CacheManager {
   private [TTL]: number | undefined;
   private [IS_CACHEABLE]: (value: any) => boolean = () => true;
   private [LOGGER]: LoggerLike = disabledLogger;
+  private readonly [CACHE_STORES]: Map<string, CacheStoreLike> = new Map();
 
   get isEnabled() {
     return this[ENABLED];
@@ -43,6 +46,32 @@ export class CacheManager {
 
   isCacheable(value: any) {
     return this[IS_CACHEABLE](value);
+  }
+
+  addStore(name: string, store: CacheStoreLike) {
+    if (!name) {
+      throw new Error(
+        "Invalid cache name. Cache's name must be a string and cannot be null, undefined or blank"
+      );
+    }
+
+    if (!isCacheStoreValid(store)) {
+      throw new Error(
+        'Invalid cache store. Cache store should be an object with `get` and `set` methods'
+      );
+    }
+
+    if (this[CACHE_STORES].has(name)) {
+      throw new Error(
+        `Invalid cache store name. A cache store with a name ${name} is already registered`
+      );
+    }
+
+    this[CACHE_STORES].set(name, store);
+  }
+
+  getStore(name) {
+    return this[CACHE_STORES].get(name);
   }
 
   initialize(options: CacheManagerOptions) {

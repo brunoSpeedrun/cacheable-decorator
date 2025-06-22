@@ -1,4 +1,4 @@
-import { CacheLike, isCacheValid } from './cache-like';
+import { CacheStoreLike, isCacheStoreValid } from './cache-like';
 import { InMemoryCache } from './in-memory-cache';
 import {
   DisabledCacheLogger,
@@ -21,7 +21,7 @@ export type CacheManagerDefaultOptions = {
 
 export class CacheManager {
   private [DEFAULT_OPTIONS]: CacheManagerDefaultOptions;
-  private readonly [CACHE_STORES]: Map<string, CacheLike>;
+  private readonly [CACHE_STORES]: Map<string, CacheStoreLike>;
   private [LOGGER]: LoggerLike;
 
   constructor() {
@@ -35,22 +35,22 @@ export class CacheManager {
     this.setLogger(this[DEFAULT_OPTIONS].logger);
   }
 
-  register(cacheName: string, store: CacheLike): any {
+  register(cacheName: string, store: CacheStoreLike): any {
     if (!cacheName) {
       throw new Error(
-        "Invalid cache name. Cache's name must be a string and cannot be null, undefined or blank",
+        "Invalid cache name. Cache's name must be a string and cannot be null, undefined or blank"
       );
     }
 
-    if (!isCacheValid(store)) {
+    if (!isCacheStoreValid(store)) {
       throw new Error(
-        'Invalid cache store. Cache store should be an object with `get` and `set` methods',
+        'Invalid cache store. Cache store should be an object with `get` and `set` methods'
       );
     }
 
     if (this[CACHE_STORES].has(cacheName)) {
       throw new Error(
-        `Invalid cache store name. A cache store with a name ${cacheName} is already registered`,
+        `Invalid cache store name. A cache store with a name ${cacheName} is already registered`
       );
     }
 
@@ -73,7 +73,7 @@ export class CacheManager {
     return (this[DEFAULT_OPTIONS].isCacheable ?? (() => true))(value);
   }
 
-  allCacheStores(): Array<{ name: string; store: CacheLike }> {
+  allCacheStores(): Array<{ name: string; store: CacheStoreLike }> {
     return Array.from(this[CACHE_STORES].entries()).map(([name, store]) => ({
       name,
       store,
@@ -120,7 +120,7 @@ export class CacheManager {
     } else {
       this[LOGGER] = new DisabledCacheLogger();
       new JsonCacheLogger().warn(
-        `Invalid logger. Logger should be an object with 'info', 'warn' and 'error' methods`,
+        `Invalid logger. Logger should be an object with 'info', 'warn' and 'error' methods`
       );
     }
   }
