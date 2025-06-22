@@ -113,5 +113,19 @@ describe('CacheManager', () => {
 
       expect(cacheManager.getStore(cacheName)).toBe(inMemoryCacheStore);
     });
+
+    it('should get all cache stores', () => {
+      const storeNames = [Date.now().toString(), Date.now().toString() + 1];
+      storeNames.forEach((id) =>
+        cacheManager.addStore(id, new InMemoryCache())
+      );
+
+      const stores = cacheManager.stores();
+
+      expect(stores).toBeInstanceOf(Array);
+      storeNames.forEach((id) =>
+        expect(stores.some((c) => c.name === id)).toBe(true)
+      );
+    });
   });
 });

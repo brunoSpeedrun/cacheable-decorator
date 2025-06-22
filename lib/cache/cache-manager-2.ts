@@ -74,6 +74,13 @@ export class CacheManager {
     return this[CACHE_STORES].get(name);
   }
 
+  stores(): Array<{ name: string; store: CacheStoreLike }> {
+    return Array.from(this[CACHE_STORES].entries()).map(([name, store]) => ({
+      name,
+      store,
+    }));
+  }
+
   initialize(options: CacheManagerOptions) {
     this[ENABLED] = options?.enabled ?? true;
     this[TTL] = options?.ttlInMilliseconds;
