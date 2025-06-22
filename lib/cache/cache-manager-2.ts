@@ -12,6 +12,10 @@ export class CacheManager {
     return this[ENABLED];
   }
 
+  enable() {
+    this[ENABLED] = true;
+  }
+
   disable() {
     this[ENABLED] = false;
   }

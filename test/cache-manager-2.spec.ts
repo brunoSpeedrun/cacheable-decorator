@@ -21,4 +21,11 @@ describe('CacheManager', () => {
 
     expect(cacheManager.isEnabled).toBe(false);
   });
+
+  it('should enable CacheManager', () => {
+    cacheManager.disable();
+    cacheManager.enable();
+
+    expect(cacheManager.isEnabled).toBe(true);
+  });
 });
