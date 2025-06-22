@@ -12,6 +12,10 @@ export class CacheManager {
     return this[ENABLED];
   }
 
+  disable() {
+    this[ENABLED] = false;
+  }
+
   initialize(options: CacheManagerOptions) {
     throw new Error('Method not implemented.');
   }

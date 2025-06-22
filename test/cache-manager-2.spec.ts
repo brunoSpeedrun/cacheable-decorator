@@ -15,4 +15,10 @@ describe('CacheManager', () => {
   it('should be enabled by default', () => {
     expect(cacheManager.isEnabled).toBe(true);
   });
+
+  it('should disable CacheManager', () => {
+    cacheManager.disable();
+
+    expect(cacheManager.isEnabled).toBe(false);
+  });
 });
