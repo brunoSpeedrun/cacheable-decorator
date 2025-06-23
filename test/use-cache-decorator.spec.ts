@@ -14,6 +14,9 @@ describe('UseCache', () => {
     const inMemoryCache: jest.Mocked<CacheStoreLike> = {
       get: jest.fn(),
       set: jest.fn(),
+      delete: jest.fn(),
+      getMany: jest.fn(),
+      setMany: jest.fn(),
     };
     CacheManager.getInstance().addStore('default', inMemoryCache);
 
@@ -410,7 +413,7 @@ describe('UseCache', () => {
       expect(loggerMock.warn).toHaveBeenCalled();
       expect(cacheGetSpy).toHaveBeenCalledTimes(1);
       expect(cacheSetSpy).not.toHaveBeenCalled();
-      expect(defaultCache['store'].size).toBe(0);
+      expect(defaultCache['cache'].size).toBe(0);
     });
   });
 

@@ -1,18 +1,31 @@
+export type CacheEntry = {
+  /**
+   * Key to set.
+   */
+  key: string;
+  /**
+   * Value to set.
+   */
+  value: any;
+  /**
+   * Time to live in milliseconds.
+   */
+  ttl?: number;
+};
+
 export interface CacheStoreLike {
-  /**
-   * Get the value of a Key
-   * @param {string} key cache key
-   */
-  get<T = any>(key: string): Promise<T | undefined>;
-  /**
-   * Set an item to the store
-   * @param {string} key the key to use.
-   * @param {T} value the value of the key
-   * @param {number} [ttl] time to live in milliseconds
-   * @returns {boolean} if it sets then it will return a true. On failure will return false.
-   */
-  set<T = any>(key: string, value: T, ttl?: number): Promise<boolean>;
+  get<T>(key: string): Promise<T | undefined>;
+
+  getMany<T>(keys: string[]): Promise<Array<T | undefined>>;
+
+  set<T>(key: string, value: T, ttl?: number): Promise<boolean>;
+
+  setMany<T>(entries: CacheEntry[]): Promise<boolean[]>;
+
+  delete(key: string | string[]): Promise<boolean>;
 }
 
 export const isCacheStoreValid = (store: any) =>
-  typeof store?.get === 'function' && typeof store?.set === 'function';
+  ['get', 'getMany', 'set', 'setMany', 'delete'].every(
+    (method) => typeof store?.[method] === 'function'
+  );
