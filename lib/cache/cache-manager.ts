@@ -1,42 +1,56 @@
+import { DisabledCacheLogger, isLoggerValid, LoggerLike } from '../logger';
 import { CacheStoreLike, isCacheStoreValid } from './cache-like';
 import { InMemoryCache } from './in-memory-cache';
-import {
-  DisabledCacheLogger,
-  isLoggerValid,
-  JsonCacheLogger,
-  LoggerLike,
-} from '../logger';
 
-const INSTANCE = Symbol('INSTANCE');
-const DEFAULT_OPTIONS = Symbol('INSTANCE');
-const CACHE_STORES = Symbol('CACHE_STORES');
-const LOGGER = Symbol('LOGGER');
-
-export type CacheManagerDefaultOptions = {
-  disabled?: boolean;
+export type CacheManagerOptions = {
+  enabled?: boolean;
   ttlInMilliseconds?: number;
   logger?: boolean | LoggerLike;
   isCacheable?: (value: any) => boolean;
 };
 
+const INSTANCE = Symbol('INSTANCE');
+const ENABLED = Symbol('ENABLED');
+const TTL = Symbol('TTL');
+const IS_CACHEABLE = Symbol('IS_CACHEABLE');
+const LOGGER = Symbol('LOGGER');
+const CACHE_STORES = Symbol('CACHE_STORES');
+
+const disabledLogger = new DisabledCacheLogger();
+
 export class CacheManager {
-  private [DEFAULT_OPTIONS]: CacheManagerDefaultOptions;
-  private readonly [CACHE_STORES]: Map<string, CacheStoreLike>;
-  private [LOGGER]: LoggerLike;
+  private [ENABLED] = true;
+  private [TTL]: number | undefined;
+  private [IS_CACHEABLE]: (value: any) => boolean = () => true;
+  private [LOGGER]: LoggerLike = disabledLogger;
+  private readonly [CACHE_STORES]: Map<string, CacheStoreLike> = new Map();
 
-  constructor() {
-    this[DEFAULT_OPTIONS] = {};
-    this[CACHE_STORES] = new Map();
-    this[LOGGER] = new JsonCacheLogger();
+  get isEnabled() {
+    return this[ENABLED];
   }
 
-  initialize(options: CacheManagerDefaultOptions) {
-    this[DEFAULT_OPTIONS] = { ...options };
-    this.setLogger(this[DEFAULT_OPTIONS].logger);
+  get ttlInMilliseconds() {
+    return this[TTL];
   }
 
-  register(cacheName: string, store: CacheStoreLike): any {
-    if (!cacheName) {
+  get logger() {
+    return this[LOGGER];
+  }
+
+  enable() {
+    this[ENABLED] = true;
+  }
+
+  disable() {
+    this[ENABLED] = false;
+  }
+
+  isCacheable(value: any) {
+    return this[IS_CACHEABLE](value);
+  }
+
+  addStore(name: string, store: CacheStoreLike) {
+    if (!name) {
       throw new Error(
         "Invalid cache name. Cache's name must be a string and cannot be null, undefined or blank"
       );
@@ -48,20 +62,31 @@ export class CacheManager {
       );
     }
 
-    if (this[CACHE_STORES].has(cacheName)) {
+    if (this[CACHE_STORES].has(name)) {
       throw new Error(
-        `Invalid cache store name. A cache store with a name ${cacheName} is already registered`
+        `Invalid cache store name. A cache store with a name ${name} is already registered`
       );
     }
 
-    this[CACHE_STORES].set(cacheName, store);
+    this[CACHE_STORES].set(name, store);
   }
 
-  getCache(cacheName: string) {
-    return this[CACHE_STORES].get(cacheName);
+  getStore(name) {
+    return this[CACHE_STORES].get(name);
   }
 
-  getDefaultCache() {
+  stores(): Array<{ name: string; store: CacheStoreLike }> {
+    return Array.from(this[CACHE_STORES].entries()).map(([name, store]) => ({
+      name,
+      store,
+    }));
+  }
+
+  removeAllStores() {
+    this[CACHE_STORES].clear();
+  }
+
+  getDefaultStore() {
     if (this[CACHE_STORES].size === 0) {
       this[CACHE_STORES].set('default', new InMemoryCache());
     }
@@ -69,45 +94,21 @@ export class CacheManager {
     return this[CACHE_STORES].values().next().value!;
   }
 
-  isCacheable(value: any) {
-    return (this[DEFAULT_OPTIONS].isCacheable ?? (() => true))(value);
-  }
-
-  allCacheStores(): Array<{ name: string; store: CacheStoreLike }> {
-    return Array.from(this[CACHE_STORES].entries()).map(([name, store]) => ({
-      name,
-      store,
-    }));
-  }
-
-  clearCacheStores() {
-    this[CACHE_STORES].clear();
-  }
-
-  get isEnabled() {
-    return !this.isDisabled;
-  }
-
-  get isDisabled() {
-    return !!this[DEFAULT_OPTIONS]?.disabled;
-  }
-
-  get ttlInMilliseconds() {
-    return this[DEFAULT_OPTIONS]?.ttlInMilliseconds;
-  }
-
-  get logger() {
-    return this[LOGGER];
+  initialize(options: CacheManagerOptions) {
+    this[ENABLED] = options?.enabled ?? true;
+    this[TTL] = options?.ttlInMilliseconds;
+    this[IS_CACHEABLE] = options?.isCacheable || (() => true);
+    this.setLogger(options?.logger);
   }
 
   private setLogger(logger?: boolean | LoggerLike) {
     if (logger === false) {
-      this[LOGGER] = new DisabledCacheLogger();
+      this[LOGGER] = disabledLogger;
       return;
     }
 
     if (logger === true) {
-      this[LOGGER] = new JsonCacheLogger();
+      this[LOGGER] = console;
       return;
     }
 
@@ -118,19 +119,12 @@ export class CacheManager {
     if (isLoggerValid(logger)) {
       this[LOGGER] = logger as LoggerLike;
     } else {
-      this[LOGGER] = new DisabledCacheLogger();
-      new JsonCacheLogger().warn(
+      this[LOGGER] = disabledLogger;
+
+      console.warn(
         `Invalid logger. Logger should be an object with 'info', 'warn' and 'error' methods`
       );
     }
-  }
-
-  enable() {
-    this[DEFAULT_OPTIONS].disabled = false;
-  }
-
-  disable() {
-    this[DEFAULT_OPTIONS].disabled = true;
   }
 
   private static [INSTANCE]: CacheManager;

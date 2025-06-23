@@ -1,5 +1,4 @@
-import { InMemoryCache } from '../lib';
-import { CacheManager } from '../lib/cache/cache-manager-2';
+import { CacheManager, InMemoryCache } from '../../lib';
 
 describe('CacheManager', () => {
   const cacheManager = CacheManager.getInstance();
@@ -36,7 +35,7 @@ describe('CacheManager', () => {
     cacheManager.initialize({});
 
     expect(cacheManager.isEnabled).toBe(true);
-    expect(cacheManager.tllInMilliseconds).toBeFalsy();
+    expect(cacheManager.ttlInMilliseconds).toBeFalsy();
     expect(cacheManager.isCacheable({})).toBe(true);
     expect(cacheManager.logger).toBeTruthy();
   });

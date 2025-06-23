@@ -15,7 +15,7 @@ describe('UseCache', () => {
       get: jest.fn(),
       set: jest.fn(),
     };
-    CacheManager.getInstance().register('default', inMemoryCache);
+    CacheManager.getInstance().addStore('default', inMemoryCache);
 
     return inMemoryCache;
   };
@@ -29,7 +29,7 @@ describe('UseCache', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     cacheManager.initialize({});
-    cacheManager.clearCacheStores();
+    cacheManager.removeAllStores();
   });
 
   describe('Skip Cache', () => {
@@ -37,7 +37,7 @@ describe('UseCache', () => {
       const loggerMock = createLoggerMock();
 
       cacheManager.initialize({
-        disabled: true,
+        enabled: false,
         logger: loggerMock,
       });
 
@@ -62,7 +62,7 @@ describe('UseCache', () => {
       const loggerMock = createLoggerMock();
 
       cacheManager.initialize({ logger: loggerMock });
-      const defaultCache = cacheManager.getDefaultCache();
+      const defaultCache = cacheManager.getDefaultStore();
 
       const id = 1;
       const returnValue = { id, user: `User ${id}` };
@@ -90,7 +90,7 @@ describe('UseCache', () => {
       const loggerMock = createLoggerMock();
 
       cacheManager.initialize({
-        disabled: false,
+        enabled: true,
         logger: loggerMock,
       });
 
@@ -145,7 +145,7 @@ describe('UseCache', () => {
     const loggerMock = createLoggerMock();
 
     cacheManager.initialize({ logger: loggerMock });
-    const defaultCache = cacheManager.getDefaultCache();
+    const defaultCache = cacheManager.getDefaultStore();
 
     const id = 1;
     const returnValue = { id, user: `User ${id}` };
@@ -169,7 +169,7 @@ describe('UseCache', () => {
     expect(cacheGetSpy).toHaveBeenCalledTimes(1);
     expect(result).toBe(cachedValue);
     expect(defaultCache).toBeInstanceOf(InMemoryCache);
-    expect(cacheManager.getCache('default')).toBe(defaultCache);
+    expect(cacheManager.getStore('default')).toBe(defaultCache);
   });
 
   describe('CacheKeyGenerator', () => {
@@ -177,7 +177,7 @@ describe('UseCache', () => {
       const loggerMock = createLoggerMock();
 
       cacheManager.initialize({ logger: loggerMock });
-      const defaultCache = cacheManager.getDefaultCache();
+      const defaultCache = cacheManager.getDefaultStore();
 
       const id = 1;
       const cachedValue = { id, user: `User ${id} from cache` };
@@ -213,7 +213,7 @@ describe('UseCache', () => {
       const loggerMock = createLoggerMock();
 
       cacheManager.initialize({ logger: loggerMock });
-      const defaultCache = cacheManager.getDefaultCache();
+      const defaultCache = cacheManager.getDefaultStore();
 
       const cachedValue = [{ id: 1, user: `User from cache` }];
       const cacheKey = `users`;
@@ -244,7 +244,7 @@ describe('UseCache', () => {
       const loggerMock = createLoggerMock();
 
       cacheManager.initialize({ logger: loggerMock });
-      const defaultCache = cacheManager.getDefaultCache();
+      const defaultCache = cacheManager.getDefaultStore();
 
       const id = 1;
       const cachedValue = { id, user: `User ${id} from cache` };
@@ -282,7 +282,7 @@ describe('UseCache', () => {
       const loggerMock = createLoggerMock();
 
       cacheManager.initialize({ logger: loggerMock });
-      const defaultCache = cacheManager.getDefaultCache();
+      const defaultCache = cacheManager.getDefaultStore();
 
       class MyCacheKeyGenerator extends CacheKeyGeneratorStrategy {
         generate(target: Object, method: string, onlyActive: boolean): string {
@@ -326,7 +326,7 @@ describe('UseCache', () => {
       const loggerMock = createLoggerMock();
 
       cacheManager.initialize({ logger: loggerMock });
-      const defaultCache = cacheManager.getDefaultCache();
+      const defaultCache = cacheManager.getDefaultStore();
 
       const cacheGetSpy = jest.spyOn(defaultCache, 'get');
       const cacheSetSpy = jest.spyOn(defaultCache, 'set');
@@ -357,7 +357,7 @@ describe('UseCache', () => {
       const loggerMock = createLoggerMock();
 
       cacheManager.initialize({ logger: loggerMock });
-      const defaultCache = cacheManager.getDefaultCache();
+      const defaultCache = cacheManager.getDefaultStore();
 
       const cacheGetSpy = jest.spyOn(defaultCache, 'get');
       const cacheSetSpy = jest.spyOn(defaultCache, 'set');
@@ -392,7 +392,7 @@ describe('UseCache', () => {
         logger: loggerMock,
         isCacheable: (value) => value != null && value != undefined,
       });
-      const defaultCache = cacheManager.getDefaultCache();
+      const defaultCache = cacheManager.getDefaultStore();
 
       const cacheGetSpy = jest.spyOn(defaultCache, 'get');
       const cacheSetSpy = jest.spyOn(defaultCache, 'set');

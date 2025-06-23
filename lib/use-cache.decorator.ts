@@ -47,13 +47,14 @@ export function UseCache<TArgs extends any[]>(
     descriptor.value = new Proxy(original, {
       apply: async function (_, outerThis, args: TArgs) {
         const cacheManager = CacheManager.getInstance();
+        const logger = cacheManager.logger;
 
         const logLabel = `[${
           outerThis.constructor.name
         }:${propertyKey.toString()}]`;
 
-        if (cacheManager.isDisabled) {
-          cacheManager.logger.info(
+        if (!cacheManager.isEnabled) {
+          logger.info(
             `${logLabel} Cache skipped. Cache Manager is disabled. Call CacheManager.getInstance().enable() to enable cache.`
           );
 
@@ -64,7 +65,7 @@ export function UseCache<TArgs extends any[]>(
           const shouldSkipCache = maybeOptions.skip.apply(outerThis, args);
 
           if (shouldSkipCache) {
-            cacheManager.logger.info(
+            logger.info(
               `${logLabel} Cache skipped. Skip method called with ${JSON.stringify(
                 args
               )}`
@@ -77,17 +78,17 @@ export function UseCache<TArgs extends any[]>(
         let cache: CacheStoreLike | undefined;
 
         if (maybeOptions?.name) {
-          cache = cacheManager.getCache(maybeOptions.name);
+          cache = cacheManager.getStore(maybeOptions.name);
 
           if (!cache) {
-            cacheManager.logger.warn(
+            logger.warn(
               `${logLabel} Cache skipped. Cache '${maybeOptions?.name}' does not exists in CacheManager.`
             );
 
             return original.apply(outerThis, args);
           }
         } else {
-          cache = cacheManager.getDefaultCache();
+          cache = cacheManager.getDefaultStore();
         }
 
         const cacheKeyGenerator = CacheKeyGeneratorFactory.from(
@@ -102,12 +103,12 @@ export function UseCache<TArgs extends any[]>(
         const cached = await cache.get(cacheKey);
 
         if (cached) {
-          cacheManager.logger.info(`${logLabel} Cache Hit: ${cacheKey}`);
+          logger.info(`${logLabel} Cache Hit: ${cacheKey}`);
 
           return cached;
         }
 
-        cacheManager.logger.info(`${logLabel} Cache Miss: ${cacheKey}`);
+        logger.info(`${logLabel} Cache Miss: ${cacheKey}`);
 
         const value = await original.apply(outerThis, args);
 
@@ -118,9 +119,7 @@ export function UseCache<TArgs extends any[]>(
         const canCache = cacheManager.isCacheable(value) && thisCanCache;
 
         if (!canCache) {
-          cacheManager.logger.warn(
-            `${logLabel} Cache not saved. isCacheable returns false`
-          );
+          logger.warn(`${logLabel} Cache not saved. isCacheable returns false`);
 
           return value;
         }
@@ -136,5 +135,3 @@ export function UseCache<TArgs extends any[]>(
     copyMethodMetadata(original, descriptor.value);
   };
 }
-
-console;
