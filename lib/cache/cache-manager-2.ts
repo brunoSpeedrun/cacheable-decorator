@@ -81,6 +81,10 @@ export class CacheManager {
     }));
   }
 
+  removeAllStores() {
+    this[CACHE_STORES].clear();
+  }
+
   initialize(options: CacheManagerOptions) {
     this[ENABLED] = options?.enabled ?? true;
     this[TTL] = options?.ttlInMilliseconds;

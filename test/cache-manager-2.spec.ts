@@ -127,5 +127,16 @@ describe('CacheManager', () => {
         expect(stores.some((c) => c.name === id)).toBe(true)
       );
     });
+
+    it('should remove all cache stores', () => {
+      const storeNames = [Date.now().toString(), Date.now().toString() + 1];
+      storeNames.forEach((id) =>
+        cacheManager.addStore(id, new InMemoryCache())
+      );
+
+      cacheManager.removeAllStores();
+
+      expect(cacheManager.stores().length).toBe(0);
+    });
   });
 });
