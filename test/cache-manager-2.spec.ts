@@ -4,6 +4,8 @@ import { CacheManager } from '../lib/cache/cache-manager-2';
 describe('CacheManager', () => {
   const cacheManager = CacheManager.getInstance();
 
+  beforeEach(() => cacheManager.removeAllStores());
+
   it('should be singleton', () => {
     const cacheManagerOne = CacheManager.getInstance();
     const cacheManagerTwo = CacheManager.getInstance();
@@ -137,6 +139,28 @@ describe('CacheManager', () => {
       cacheManager.removeAllStores();
 
       expect(cacheManager.stores().length).toBe(0);
+    });
+
+    it('should InMemoryCache be default store when no cache is registered', () => {
+      const defaultCache = cacheManager.getDefaultStore();
+
+      expect(cacheManager.stores().length).toBe(1);
+      expect(defaultCache).toBeDefined();
+      expect(defaultCache).toBeInstanceOf(InMemoryCache);
+      expect(cacheManager.getStore('default')).toBe(defaultCache);
+    });
+
+    it('should first registered cache be default cache', () => {
+      const myCache = new InMemoryCache();
+
+      cacheManager.addStore('my-cache', myCache);
+
+      const defaultCache = cacheManager.getDefaultStore();
+
+      expect(defaultCache).toBeDefined();
+      expect(defaultCache).toBeInstanceOf(InMemoryCache);
+      expect(cacheManager.getStore('my-cache')).toBe(defaultCache);
+      expect(cacheManager.stores()[0].store).toBe(myCache);
     });
   });
 });

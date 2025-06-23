@@ -1,5 +1,6 @@
 import { DisabledCacheLogger, isLoggerValid, LoggerLike } from '../logger';
 import { CacheStoreLike, isCacheStoreValid } from './cache-like';
+import { InMemoryCache } from './in-memory-cache';
 
 export type CacheManagerOptions = {
   enabled?: boolean;
@@ -83,6 +84,14 @@ export class CacheManager {
 
   removeAllStores() {
     this[CACHE_STORES].clear();
+  }
+
+  getDefaultStore() {
+    if (this[CACHE_STORES].size === 0) {
+      this[CACHE_STORES].set('default', new InMemoryCache());
+    }
+
+    return this[CACHE_STORES].values().next().value!;
   }
 
   initialize(options: CacheManagerOptions) {
