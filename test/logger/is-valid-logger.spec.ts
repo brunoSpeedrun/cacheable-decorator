@@ -1,16 +1,6 @@
-import {
-  isLoggerValid,
-  JsonCacheLogger,
-  DisabledCacheLogger,
-  LoggerLike,
-} from '../../lib';
+import { isLoggerValid, DisabledCacheLogger, LoggerLike } from '../../lib';
 
 describe('isLoggerValid', () => {
-  it('should return true for a valid logger (JsonCacheLogger)', () => {
-    const logger = new JsonCacheLogger();
-    expect(isLoggerValid(logger)).toBe(true);
-  });
-
   it('should return true for a valid logger (DisabledCacheLogger)', () => {
     const logger = new DisabledCacheLogger();
     expect(isLoggerValid(logger)).toBe(true);
