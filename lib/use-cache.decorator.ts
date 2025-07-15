@@ -3,6 +3,7 @@ import {
   CacheStoreLike,
   CacheKeyGeneratorFactory,
 } from './cache';
+import { createCacheProxyContext } from './create-cache-proxy-context';
 import { UseCacheOptions } from './use-cache-options';
 import { copyMethodMetadata } from './utils';
 
@@ -36,102 +37,66 @@ export function UseCache<TArgs extends any[]>(
     propertyKey: string | symbol,
     descriptor: TypedPropertyDescriptor<(...args: TArgs) => Promise<any>>
   ) => {
-    const original = descriptor.value;
+    const run = async (
+      cache: CacheStoreLike,
+      outerThis: any,
+      original: (...args: TArgs) => Promise<any>,
+      args: TArgs,
+      maybeOptions?: UseCacheOptions<TArgs>
+    ) => {
+      const cacheManager = CacheManager.getInstance();
+      const logger = cacheManager.logger;
 
-    if (typeof original !== 'function') {
-      throw new Error(
-        `The @UseCase decorator can be only used on functions, but ${propertyKey.toString()} is not a function.`
+      const logLabel = `[${
+        outerThis.constructor.name
+      }:${propertyKey.toString()}]`;
+
+      const cacheKeyGenerator = CacheKeyGeneratorFactory.from(
+        maybeOptions?.key
       );
-    }
+      const cacheKey = cacheKeyGenerator.generate(
+        outerThis,
+        propertyKey.toString(),
+        ...args
+      );
 
-    descriptor.value = new Proxy(original, {
-      apply: async function (_, outerThis, args: TArgs) {
-        const cacheManager = CacheManager.getInstance();
-        const logger = cacheManager.logger;
+      const cached = await cache.get(cacheKey);
 
-        const logLabel = `[${
-          outerThis.constructor.name
-        }:${propertyKey.toString()}]`;
+      if (cached) {
+        logger.info(`${logLabel} Cache Hit: ${cacheKey}`);
 
-        if (!cacheManager.isEnabled) {
-          logger.info(
-            `${logLabel} Cache skipped. Cache Manager is disabled. Call CacheManager.getInstance().enable() to enable cache.`
-          );
+        return cached;
+      }
 
-          return original.apply(outerThis, args);
-        }
+      logger.info(`${logLabel} Cache Miss: ${cacheKey}`);
 
-        if (typeof maybeOptions?.skip === 'function') {
-          const shouldSkipCache = maybeOptions.skip.apply(outerThis, args);
+      const value = await original.apply(outerThis, args);
 
-          if (shouldSkipCache) {
-            logger.info(
-              `${logLabel} Cache skipped. Skip method called with ${JSON.stringify(
-                args
-              )}`
-            );
+      const thisCanCache =
+        typeof maybeOptions?.isCacheable === 'function'
+          ? maybeOptions.isCacheable.apply(outerThis, [value, ...args])
+          : true;
+      const canCache = cacheManager.isCacheable(value) && thisCanCache;
 
-            return original.apply(outerThis, args);
-          }
-        }
-
-        let cache: CacheStoreLike | undefined;
-
-        if (maybeOptions?.name) {
-          cache = cacheManager.getStore(maybeOptions.name);
-
-          if (!cache) {
-            logger.warn(
-              `${logLabel} Cache skipped. Cache '${maybeOptions?.name}' does not exists in CacheManager.`
-            );
-
-            return original.apply(outerThis, args);
-          }
-        } else {
-          cache = cacheManager.getDefaultStore();
-        }
-
-        const cacheKeyGenerator = CacheKeyGeneratorFactory.from(
-          maybeOptions?.key
-        );
-        const cacheKey = cacheKeyGenerator.generate(
-          outerThis,
-          propertyKey.toString(),
-          ...args
-        );
-
-        const cached = await cache.get(cacheKey);
-
-        if (cached) {
-          logger.info(`${logLabel} Cache Hit: ${cacheKey}`);
-
-          return cached;
-        }
-
-        logger.info(`${logLabel} Cache Miss: ${cacheKey}`);
-
-        const value = await original.apply(outerThis, args);
-
-        const thisCanCache =
-          typeof maybeOptions?.isCacheable === 'function'
-            ? maybeOptions.isCacheable.apply(outerThis, [value, ...args])
-            : true;
-        const canCache = cacheManager.isCacheable(value) && thisCanCache;
-
-        if (!canCache) {
-          logger.warn(`${logLabel} Cache not saved. isCacheable returns false`);
-
-          return value;
-        }
-
-        const ttl = maybeOptions?.ttl ?? cacheManager.ttlInMilliseconds;
-
-        await cache.set(cacheKey, value, ttl);
+      if (!canCache) {
+        logger.warn(`${logLabel} Cache not saved. isCacheable returns false`);
 
         return value;
-      },
-    });
+      }
 
-    copyMethodMetadata(original, descriptor.value);
+      const ttl = maybeOptions?.ttl ?? cacheManager.ttlInMilliseconds;
+
+      await cache.set(cacheKey, value, ttl);
+
+      return value;
+    };
+
+    createCacheProxyContext(
+      UseCache.name,
+      propertyKey,
+      descriptor,
+      run,
+      maybeOptions
+    );
   };
 }
