@@ -1,15 +1,16 @@
 import {
-  CacheManager,
   CacheStoreLike,
+  CacheManager,
   CacheKeyGeneratorFactory,
-} from './cache';
-import { createCacheProxyContext } from './create-cache-proxy-context';
-import { UseCacheOptions } from './use-cache-options';
+} from '../cache';
+import { createCacheProxyContext } from '../create-cache-proxy-context';
+
+import { UseCachePutOptions } from './use-cache-put-options';
 
 /**
  * Wraps the decorated method in a cache logic.
  */
-export function UseCache(): (
+export function UseCachePut(): (
   target: any,
   propertyKey: string | symbol,
   descriptor: TypedPropertyDescriptor<(...args: any) => Promise<any>>
@@ -20,16 +21,16 @@ export function UseCache(): (
  *
  * @param options Use cache options
  */
-export function UseCache<TArgs extends any[]>(
-  options: UseCacheOptions<TArgs>
+export function UseCachePut<TArgs extends any[]>(
+  options: UseCachePutOptions<TArgs>
 ): (
   target: any,
   propertyKey: string | symbol,
   descriptor: TypedPropertyDescriptor<(...args: TArgs) => Promise<any>>
 ) => void;
 
-export function UseCache<TArgs extends any[]>(
-  maybeOptions?: UseCacheOptions<TArgs>
+export function UseCachePut<TArgs extends any[]>(
+  maybeOptions?: UseCachePutOptions<TArgs>
 ) {
   return (
     target: any,
@@ -41,7 +42,7 @@ export function UseCache<TArgs extends any[]>(
       outerThis: any,
       original: (...args: TArgs) => Promise<any>,
       args: TArgs,
-      maybeOptions?: UseCacheOptions<TArgs>
+      maybeOptions?: UseCachePutOptions<TArgs>
     ) => {
       const cacheManager = CacheManager.getInstance();
       const logger = cacheManager.logger;
@@ -49,25 +50,6 @@ export function UseCache<TArgs extends any[]>(
       const logLabel = `[${
         outerThis.constructor.name
       }:${propertyKey.toString()}]`;
-
-      const cacheKeyGenerator = CacheKeyGeneratorFactory.from(
-        maybeOptions?.key
-      );
-      const cacheKey = cacheKeyGenerator.generate(
-        outerThis,
-        propertyKey.toString(),
-        ...args
-      );
-
-      const cached = await cache.get(cacheKey);
-
-      if (cached) {
-        logger.info(`${logLabel} Cache Hit: ${cacheKey}`);
-
-        return cached;
-      }
-
-      logger.info(`${logLabel} Cache Miss: ${cacheKey}`);
 
       const value = await original.apply(outerThis, args);
 
@@ -83,6 +65,15 @@ export function UseCache<TArgs extends any[]>(
         return value;
       }
 
+      const cacheKeyGenerator = CacheKeyGeneratorFactory.from(
+        maybeOptions?.key
+      );
+
+      const cacheKey = cacheKeyGenerator.generate(
+        outerThis,
+        propertyKey.toString(),
+        ...args
+      );
       const ttl = maybeOptions?.ttl ?? cacheManager.ttlInMilliseconds;
 
       await cache.set(cacheKey, value, ttl);
@@ -91,7 +82,7 @@ export function UseCache<TArgs extends any[]>(
     };
 
     createCacheProxyContext(
-      UseCache.name,
+      UseCachePut.name,
       propertyKey,
       descriptor,
       run,
