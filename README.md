@@ -227,4 +227,49 @@ export class WordpressService {
 }
 ```
 
+## @UseCachePut
+
+You can use the `@UseCachePut` decorator to update the cache after a method executes.
+
+```typescript
+export class UserService {
+  constructor(private readonly userRepository: IUserRepository)
+
+  @UseCachePut({ key: (_, userId: number) => `users:${userId}` })
+  async changeUserEmail(newEmail: string, userId: number) {
+    const user = await this.userRepository.findByIdOrFail(id);
+
+    user.changeEmail(newEmail);
+
+    await this.userRepository.save(user);
+
+    return user;
+  }
+}
+```
+
+After configuring our method with `@UseCachePut` and executing it, the method's return will be saved in the provided cache key.
+
+
+```typescript
+
+const newEmail = 'tony.stark@mail.com';
+const userId: 1341;
+
+await userService.changeUserEmail(newEmail, userId);
+
+```
+
+```typescript
+export type UseCachePutOptions<TArgs extends any[]> = {
+  name?: string;
+  skip?: (...args: TArgs) => boolean;
+  key?: string | ((...args: TArgs) => string) | CacheKeyGeneratorStrategy;
+  ttl?: number;
+  isCacheable?: (value: any, ...args: TArgs) => boolean;
+};
+```
+
+You can use the same options as the `@UseCache` decorator.
+
 ## <> with :heart: and [VSCode](https://code.visualstudio.com)
