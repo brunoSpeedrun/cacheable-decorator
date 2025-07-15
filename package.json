@@ -1,6 +1,6 @@
 {
   "name": "cacheable-decorator",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A zero dependencies decorator for cache concerns.",
   "license": "MIT",
   "author": "bxmoura",
