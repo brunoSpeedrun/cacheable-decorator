@@ -9,9 +9,9 @@
   "types": "dist/lib/index.d.ts",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "https://github.com/brunoSpeedrun/cacheable-decorator"
   },
-  "homepage": "",
+  "homepage": "https://github.com/brunoSpeedrun/cacheable-decorator",
   "bugs": {
     "url": "https://github.com/brunoSpeedrun/cacheable-decorator/issues"
   },
