@@ -2,8 +2,8 @@ import {
   CacheManager,
   CacheStoreLike,
   CacheKeyGeneratorFactory,
-} from './cache';
-import { createCacheProxyContext } from './create-cache-proxy-context';
+} from '../cache';
+import { createCacheProxyContext } from '../create-cache-proxy-context';
 import { UseCacheOptions } from './use-cache-options';
 
 /**

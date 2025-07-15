@@ -1,4 +1,4 @@
-import { CacheKeyGeneratorStrategy } from './cache';
+import { CacheKeyGeneratorStrategy } from '../cache';
 
 export type UseCacheOptions<TArgs extends any[]> = {
   name?: string;
