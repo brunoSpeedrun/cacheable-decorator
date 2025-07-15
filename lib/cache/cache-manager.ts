@@ -3,9 +3,30 @@ import { CacheStoreLike, isCacheStoreValid } from './cache-like';
 import { InMemoryCache } from './in-memory-cache';
 
 export type CacheManagerOptions = {
+  /**
+   * Enables/Disables the cache globally (default is true).
+   * When disabled, the cache flow is ignored.
+   * This makes debugging and application development easier.
+   */
   enabled?: boolean;
+
+  /**
+   * Sets the default ttl. This option can be overridden in @UseCache.
+   * The default is null.
+   */
   ttlInMilliseconds?: number;
+
+  /**
+   * By default, logging is disabled (false).
+   * You can pass the value true, which will cause the console to be used as the logger.
+   * or define your own logger.
+   */
   logger?: boolean | LoggerLike;
+
+  /**
+   * A function to be executed before saving the data to the cache.
+   * If not specified, a function that always returns true will be used.
+   */
   isCacheable?: (value: any) => boolean;
 };
 
@@ -71,7 +92,7 @@ export class CacheManager {
     this[CACHE_STORES].set(name, store);
   }
 
-  getStore(name) {
+  getStore(name: string) {
     return this[CACHE_STORES].get(name);
   }
 

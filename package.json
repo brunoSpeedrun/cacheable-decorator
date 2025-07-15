@@ -1,6 +1,6 @@
 {
   "name": "cacheable-decorator",
-  "version": "1.0.0-alpha",
+  "version": "1.0.0",
   "description": "A zero dependencies decorator for cache concerns.",
   "license": "MIT",
   "author": "bxmoura",
@@ -48,8 +48,8 @@
   },
   "devDependencies": {
     "@types/jest": "30.0.0",
-    "@types/node": "24.0.3",
-    "jest": "30.0.2",
+    "@types/node": "24.0.14",
+    "jest": "30.0.4",
     "ts-jest": "29.4.0",
     "typescript": "5.8.3"
   },
