@@ -10,7 +10,7 @@ export class WordpressService {
 
   async findPostBySlug(slug: string) {
     const { data } = await axios.get(
-      `https://example.com/wp-json/wp/v2/posts?${slug}`,
+      `https://example.com/wp-json/wp/v2/posts?${slug}`
     );
 
     if (data.length === 0) {
@@ -35,11 +35,14 @@ export class WordpressService {
       return cached;
     }
 
-    const author = await axios.get(`https://example.com/wp-json/wp/v2/users/${id}`, {
-      headers: {
-        Authorization: 'Bearer <token>',
-      },
-    })
+    const author = await axios.get(
+      `https://example.com/wp-json/wp/v2/users/${id}`,
+      {
+        headers: {
+          Authorization: 'Bearer <token>',
+        },
+      }
+    );
 
     await this.cache.set(cacheKey, author);
 
@@ -54,9 +57,7 @@ export class WordpressService {
 
 - If you need to change the cache library, you will need to change not only the `findAuthorById` method, but the tests as well.
 
-
 Caching is generally considered a cross-cutting concern in software development. This is because caching logic often needs to be implemented across multiple modules or layers of an application.
-
 
 The `cacheable-decorator` helps you use cache as a cross-cutting concern and reduce the time it takes to add cache to your application.
 
@@ -122,6 +123,8 @@ cacheManager.addStore('redis', keyv);
 
 > You can define your own cache store by implementing the CacheStoreLike interface.
 
+> Fully compatible with [keyv](https://keyv.org).
+
 ```typescript
 export interface CacheStoreLike {
   get<T>(key: string): Promise<T | undefined>;
@@ -137,7 +140,6 @@ export interface CacheStoreLike {
 ```
 
 ## @UseCache
-
 
 The **@UseCache** decorator accepts the following options:
 
@@ -178,7 +180,6 @@ In the example above, if the method is called with the value `1` the key to be g
 
 > wordpress-service:find-author-by-id:MQ==
 
-
 You can also provide an object that implements the following abstract class:
 
 ```typescript
@@ -189,17 +190,15 @@ export abstract class CacheKeyGeneratorStrategy {
 
 - **ttl** - The TTL to be used. If not specified, the one defined in `CacheManager` will be used.
 
-
 - **isCacheable** - A function that checks if the method's return is cacheable. (A boolean AND is done with the method defined in `cacheManager.initialize`).
 
 Now let's look at our `WordpressService` class with the `@UseCache` decorator:
 
 ```typescript
 export class WordpressService {
-
   async findPostBySlug(slug: string) {
     const { data } = await axios.get(
-      `https://example.com/wp-json/wp/v2/posts?${slug}`,
+      `https://example.com/wp-json/wp/v2/posts?${slug}`
     );
 
     if (data.length === 0) {
@@ -229,11 +228,11 @@ export class WordpressService {
 
 ## @UseCachePut
 
-You can use the `@UseCachePut` decorator to update the cache after a method executes.
+You can use the **@UseCachePut** decorator to update the cache after a method executes.
 
 ```typescript
 export class UserService {
-  constructor(private readonly userRepository: IUserRepository)
+  constructor(private readonly userRepository: IUserRepository);
 
   @UseCachePut({ key: (_, userId: number) => `users:${userId}` })
   async changeUserEmail(newEmail: string, userId: number) {
@@ -248,17 +247,16 @@ export class UserService {
 }
 ```
 
-After configuring our method with `@UseCachePut` and executing it, the method's return will be saved in the provided cache key.
-
+After configuring our method with **@UseCachePut** and executing it, the method's return will be saved in the provided cache key.
 
 ```typescript
-
 const newEmail = 'tony.stark@mail.com';
 const userId: 1341;
 
 await userService.changeUserEmail(newEmail, userId);
-
 ```
+
+You can use the same options as the **@UseCache** decorator.
 
 ```typescript
 export type UseCachePutOptions<TArgs extends any[]> = {
@@ -270,6 +268,33 @@ export type UseCachePutOptions<TArgs extends any[]> = {
 };
 ```
 
-You can use the same options as the `@UseCache` decorator.
+## @UseCacheEvict
+
+Sometimes we want to clear the cache after an operation. The code snippet below shows how we can clear the cache after a user updates.
+
+```typescript
+export class UserService {
+  constructor(private readonly userRepository: IUserRepository);
+
+  @UseCacheEvict({ key: (_, userId: number) => `users:${userId}:addresses` })
+  async addAddress(newAddress: UserAddress, userId: number) {
+    const user = await this.userRepository.findByIdOrFail(id);
+
+    user.addAddress(newAddress);
+
+    await this.userRepository.save(user);
+  }
+}
+```
+
+> The `keys` option is required, and can return a string array containing the cache keys to be deleted.
+
+```typescript
+export type UseCacheEvictOptions<TArgs extends any[]> = {
+  name?: string;
+  skip?: (...args: TArgs) => boolean;
+  keys: string | Array<string> | ((...args: TArgs) => string | Array<string>);
+};
+```
 
 ## <> with :heart: and [VSCode](https://code.visualstudio.com)
